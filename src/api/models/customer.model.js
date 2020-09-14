@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const mongoose = require('mongoose');
 const mongooseBD = require('../../config/mongoose');
 const httpStatus = require('http-status');
@@ -7,8 +8,11 @@ const moment = require('moment-timezone');
 const jwt = require('jwt-simple');
 const APIError = require('../utils/APIError');
 const autoIncrement = require('../services/mongooseAutoIncrement');
-const { env, jwtSecret, jwtExpirationInterval, masterAccount, masterAccountPassword } = require('../../config/vars');
-const uuidv4 = require('uuid/v4');
+const {
+  env, jwtSecret, jwtExpirationInterval, masterAccount, masterAccountPassword,
+} = require('../../config/vars');
+/** const uuidv4 = require('uuid/v4'); */
+const { generateUniqKey, generateRoutingNumber } = require('../utils/utils');
 
 autoIncrement.initialize(mongooseBD.connect());
 
@@ -33,7 +37,7 @@ const customerSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 6,
+    minlength: 3,
     maxlength: 128,
   },
   name: {
@@ -41,6 +45,26 @@ const customerSchema = new mongoose.Schema({
     maxlength: 128,
     index: true,
     trim: true,
+  },
+  phone: {
+    type: String,
+    maxlength: 20,
+    unique: true,
+    default: 0,
+  },
+  dwollaID: {
+    type: String,
+    maxlength: 100000,
+    default: generateUniqKey(0, 60000),
+  },
+  resetToken: {
+    type: String,
+    default: 0,
+  },
+  routingNumber: {
+    type: Number,
+    maxlength: 9,
+    default: generateRoutingNumber(),
   },
   role: {
     type: String,
@@ -50,13 +74,16 @@ const customerSchema = new mongoose.Schema({
   balance: {
     type: Number,
     min: 0,
-    default: 0
+    default: 5000,
   },
-
+  contacts: [],
+  image: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Image',
+  },
 }, {
   timestamps: true,
 });
-
 
 
 /**
@@ -86,7 +113,7 @@ customerSchema.pre('save', async function save(next) {
 customerSchema.method({
   transformBalance() {
     const transformed = {};
-    const fields = ['id', 'accountNumber', 'name', 'email', 'role', 'balance', 'createdAt'];
+    const fields = ['id', 'accountNumber', 'name', 'email', 'phone', 'role', 'dwollaID', 'routingNumber', 'contacts', 'image', 'balance', 'createdAt'];
 
     fields.forEach((field) => {
       transformed[field] = this[field];
@@ -96,7 +123,7 @@ customerSchema.method({
   },
   transform() {
     const transformed = {};
-    const fields = ['id', 'accountNumber', 'name', 'email', 'role', 'createdAt'];
+    const fields = ['id', 'accountNumber', 'name', 'email', 'phone', 'dwollaID', 'routingNumber', 'contacts', 'balance', 'image', 'role', 'createdAt'];
 
     fields.forEach((field) => {
       transformed[field] = this[field];
@@ -166,13 +193,11 @@ customerSchema.statics = {
       password: masterAccountPassword,
     };
     try {
-      let customer = await this.findOne({ 'accountNumber': masterAccountData.accountNumber }).exec();
-      
+      const customer = await this.findOne({ accountNumber: masterAccountData.accountNumber }).exec();
       if (customer) {
         return customer;
-      }else{
-        return await this.create(masterAccountData);
-      }      
+      }
+      return await this.create(masterAccountData);
     } catch (error) {
       throw error;
     }
@@ -254,7 +279,7 @@ customerSchema.plugin(autoIncrement.plugin, {
   model: 'Customer',
   field: 'accountNumber',
   startAt: 1001,
-  incrementBy: 1
+  incrementBy: 1,
 });
 
 /**

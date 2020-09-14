@@ -50,4 +50,4 @@ gatewayTransactionSchema.method({
 });
 
 
-module.exports = mongoose.model('GatewayTransaction', gatewayTransactionSchema);
+module.exports = mongoose.model('GatewayTransaction', gatewayTransactionSchema);//passerelle de transaction

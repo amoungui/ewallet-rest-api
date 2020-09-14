@@ -1,6 +1,14 @@
+/* eslint-disable no-trailing-spaces */
+/* eslint-disable no-unused-vars */
 const express = require('express');
 const validate = require('express-validation');
 const controller = require('../../controllers/auth.controller');
+const { 
+  authorize, 
+  ADMIN, 
+  LOGGED_CUSTOMER, 
+} = require('../../middlewares/auth');
+  
 const {
   login,
   register,
@@ -100,6 +108,10 @@ router.route('/refresh-token')
 /**
  * TODO: POST /v1/auth/reset-password
  */
+router.route('/forgot')
+  .post(controller.forgot);
 
+router.route('/reset')
+  .patch(controller.reset);
 
 module.exports = router;

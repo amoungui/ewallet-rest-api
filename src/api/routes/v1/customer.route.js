@@ -1,7 +1,13 @@
+/* eslint-disable max-len */
+/* eslint-disable no-trailing-spaces */
 const express = require('express');
 const validate = require('express-validation');
 const controller = require('../../controllers/customer.controller');
-const { authorize, ADMIN, LOGGED_CUSTOMER } = require('../../middlewares/auth');
+const {
+  authorize, 
+  ADMIN, 
+  LOGGED_CUSTOMER,
+} = require('../../middlewares/auth');
 const {
   listCustomers,
   createCustomer,
@@ -40,7 +46,8 @@ router
    * @apiError (Unauthorized 401)  Unauthorized  Only authenticated customers can access the data
    * @apiError (Forbidden 403)     Forbidden     Only admins can access the data
    */
-  .get(authorize(ADMIN), validate(listCustomers), controller.list)
+  .get(authorize(), validate(listCustomers), controller.list)
+
   /**
    * @api {post} v1/customers Create Customer
    * @apiDescription Create a new customer
@@ -92,7 +99,31 @@ router
    * @apiError (Unauthorized 401)  Unauthorized  Only authenticated Customers can access the data
    */
   .get(authorize(), controller.loggedIn);
-
+  
+router
+  .route('/list')
+  /**
+   * @api {get} v1/customers/list List Customers
+   * @apiDescription Get a list of customers
+   * @apiVersion 1.0.0
+   * @apiName ListCustomers
+   * @apiGroup Customer
+   * @apiPermission admin
+   *
+   * @apiHeader {String} Athorization  Customer's access token
+   *
+   * @apiParam  {Number{1-}}         [page=1]     List page
+   * @apiParam  {Number{1-100}}      [perPage=1]  Customers per page
+   * @apiParam  {String}             [name]       Customer's name
+   * @apiParam  {String}             [email]      Customer's email
+   * @apiParam  {String=customer,admin}  [role]       Customer's role
+   *
+   * @apiSuccess {Object[]} customers List of customers.
+   *
+   * @apiError (Unauthorized 401)  Unauthorized  Only authenticated customers can access the data
+   * @apiError (Forbidden 403)     Forbidden     Only admins can access the data
+   */
+  .get(controller.list)
 
 router
   .route('/:customerId')
@@ -118,6 +149,8 @@ router
    * @apiError (Not Found 404)    NotFound     Customer does not exist
    */
   .get(authorize(LOGGED_CUSTOMER), controller.get)
+
+
   /**
    * @api {put} v1/customers/:id Replace Customer
    * @apiDescription Replace the whole customer document with a new one
@@ -147,6 +180,8 @@ router
    * @apiError (Not Found 404)    NotFound     Customer does not exist
    */
   .put(authorize(LOGGED_CUSTOMER), validate(replaceCustomer), controller.replace)
+
+
   /**
    * @api {patch} v1/customers/:id Update Customer
    * @apiDescription Update some fields of a customer document
@@ -174,8 +209,9 @@ router
    * @apiError (Unauthorized 401) Unauthorized Only authenticated customers can modify the data
    * @apiError (Forbidden 403)    Forbidden    Only customer with same id or admins can modify the data
    * @apiError (Not Found 404)    NotFound     Customer does not exist
-   */
+   */  
   .patch(authorize(LOGGED_CUSTOMER), validate(updateCustomer), controller.update)
+
   /**
    * @api {patch} v1/customers/:id Delete Customer
    * @apiDescription Delete a customer

@@ -3,7 +3,7 @@ services:
   ewallet-api:
     build: .
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/ewallet-rest-api
+      - MONGO_URI=mongodb://localhost:27017/e-wallet
     volumes:
       - .:/app
     ports:

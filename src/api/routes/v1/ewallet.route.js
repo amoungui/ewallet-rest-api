@@ -113,7 +113,7 @@ router
    * @apiGroup eWallet
    * @apiPermission customer
    *
-   * @apiHeader {String} Athorization Customer's access token
+   * @apiHeader {String} Authorization Customer's access token
    *
    * @apiParam  {Number{0...50000}}       amount       Decimal whith two fraction digits.
    * @apiParam  {Number}             destinationAccountNumber  Transaction's destinationAccountNumber

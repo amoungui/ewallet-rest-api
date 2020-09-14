@@ -48,4 +48,4 @@ exports.debitCard = async (accountNumber, card, amount) => {
     const savedCustomer = await Customer.findOne({ 'accountNumber': accountNumber });
     const response = { transaction: transaction.transform(), customer: savedCustomer.transformBalance() }
     return response;
-  };
+};

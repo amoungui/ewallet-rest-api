@@ -1,8 +1,17 @@
+/* eslint-disable no-trailing-spaces */
+/* eslint-disable space-before-blocks */
+/* eslint-disable keyword-spacing */
+/* eslint-disable consistent-return */
 const httpStatus = require('http-status');
 const Customer = require('../models/customer.model');
 const RefreshToken = require('../models/refreshToken.model');
 const moment = require('moment-timezone');
-const { jwtExpirationInterval } = require('../../config/vars');
+const { env, jwtExpirationInterval } = require('../../config/vars');
+const { getResetRequest } = require('../models/resetRequests');
+const sendResetLink = require('../controllers/sendEmailController');
+// eslint-disable-next-line import/no-unresolved
+const bcrypt = require('bcryptjs');
+const { isEqualWith } = require('lodash');
 
 /**
 * Returns a formated object with tokens
@@ -22,14 +31,17 @@ function generateTokenResponse(customer, accessToken) {
  * @public
  */
 exports.register = async (req, res, next) => {
+  const { password, confirmPassword } = req.body;
   try {
-    const customer = await (new Customer(req.body)).save();
-    const customerTransformed = customer.transform();
-    const token = generateTokenResponse(customer, customer.token());
-    res.status(httpStatus.CREATED);
-    return res.json({ token, customer: customerTransformed });
+    if(isEqualWith(password, confirmPassword)){
+      const customer = await (new Customer(req.body)).save();
+      const customerTransformed = customer.transform();
+      const token = generateTokenResponse(customer, customer.token());
+      res.status(httpStatus.CREATED);
+      return res.json({ token, customer: customerTransformed });  
+    }
   } catch (error) {
-    return next(Customer.checkDuplicateEmail(error));
+    return res.status(400).json({ error: Customer.checkDuplicateEmail(error) });
   }
 };
 
@@ -64,5 +76,40 @@ exports.refresh = async (req, res, next) => {
     return res.json(response);
   } catch (error) {
     return next(error);
+  }
+};
+
+/**
+ * 
+ * @public
+ */
+exports.forgot = (req, res, next) => {
+  const { email } = req.body;
+  Customer.findOne({ email }).then((response) => {
+    if(response){
+      sendResetLink(response.email, response.id);      
+    }
+  }).catch(() => {
+    res.status(400).json({ error: 'user with this email do not exist' });
+  });
+};
+
+/**
+ * 
+ * @public
+ */
+exports.reset = async (req, res, next) => {
+  const thisRequest = getResetRequest(req.body.id);
+  if (thisRequest) {
+    const user = await Customer.find({ email: thisRequest.email });
+    const rounds = env === 'test' ? 1 : 10;
+
+    bcrypt.hash(req.body.password, rounds).then((hashed) => {
+      user.password = hashed;
+      user.save();
+      res.status(204).json();
+    });
+  } else {
+    res.status(404).json();
   }
 };

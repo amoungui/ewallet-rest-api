@@ -22,9 +22,10 @@ if (env === 'development') {
 * @public
 */
 exports.connect = () => {
-  mongoose.connect(mongo.uri, {
+  mongoose.connect(mongo.uri, {//'mongodb+srv://serges:serges@marvel-biyxx.mongodb.net/oc-test?retryWrites=true&w=majority'
     keepAlive: 1,
-    useMongoClient: true,
+    useNewUrlParser: true, //useMongoClient: true
+    useUnifiedTopology: true,
   });
   return mongoose.connection;
 };

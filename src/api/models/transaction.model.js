@@ -63,27 +63,25 @@ transactionSchema.post('save', async function save(doc, next) {
       const currentCustomer = await Customer.findOne({ 'accountNumber': this.accountNumber });      
       currentCustomer.balance += this.amount;
       currentCustomer.balance = currentCustomer.balance.toFixed(2);      
-      const savedCustomer = await currentCustomer.save();     
-      
+      const savedCustomer = await currentCustomer.save();           
     }
-
 
     if(this.wasNew && this.operation === 'transfer' && this.amount < 0){
       let fee = 0;
       let tempAmount = Math.abs(this.amount);
 
       if(tempAmount <= 1000){
-        fee = 8 + (tempAmount * 0.03);
+        fee = 0 + (tempAmount * 0);//fee = 8 + (tempAmount * 0.03);
       }else if(tempAmount > 1000 && tempAmount <= 5000){
-        fee = 6 + (tempAmount * 0.025);
+        fee = 0 + (tempAmount * 0);//fee = 6 + (tempAmount * 0.025);
       }else if(tempAmount > 5000 && tempAmount <= 10000){
-        fee = 4 + (tempAmount * 0.02);
+        fee = 0 + (tempAmount * 0);//fee = 4 + (tempAmount * 0.02);
       }else if(tempAmount > 10000){
-        fee = 3 + (tempAmount * 0.01);
+        fee = 0 + (tempAmount * 0);//fee = 3 + (tempAmount * 0.01);
       }
       
 
-      if(fee > 0){
+      if(fee === 0){//fee > 0
         const transFee = new Transaction();
         transFee.amount = -fee;
         transFee.amount = transFee.amount.toFixed(2);
@@ -95,9 +93,7 @@ transactionSchema.post('save', async function save(doc, next) {
         const masterAccount = await Customer.getMasterAccount();   
         masterAccount.balance -= savedTransFee.amount;
         const savedMasterAccount = await masterAccount.save();
-
       }
-
     }
 
     return next();
